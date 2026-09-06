@@ -1,0 +1,56 @@
+{
+	"name": "n8n-nodes-dns-doctor",
+	"version": "0.1.0",
+	"description": "n8n community node for DNS Doctor: scan, diagnose and fix a domain's SPF, DMARC and DKIM, check DNS propagation from six locations, audit SPF includes, and read monitoring alerts. Deterministic verdicts and copy-paste records from dnsdoctor.dev.",
+	"license": "MIT",
+	"homepage": "https://dnsdoctor.dev",
+	"keywords": [
+		"n8n-community-node-package",
+		"dns",
+		"dmarc",
+		"spf",
+		"dkim",
+		"email-security",
+		"propagation"
+	],
+	"author": {
+		"name": "DNS Doctor",
+		"email": "hello@dnsdoctor.dev"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/dnsdoctor/n8n-nodes-dns-doctor.git"
+	},
+	"scripts": {
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"release": "n8n-node release",
+		"prepublishOnly": "n8n-node prerelease"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": true,
+		"credentials": [
+			"dist/credentials/DnsDoctorApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/DnsDoctor/DnsDoctor.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "*",
+		"eslint": "9.32.0",
+		"prettier": "3.6.2",
+		"release-it": "^19.0.4",
+		"typescript": "5.9.2"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	}
+}
