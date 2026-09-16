@@ -56,6 +56,14 @@ export const toolDescription: INodeProperties[] = [
 				routing: { request: { method: 'POST', url: '/api/tools/spf-count' } },
 			},
 			{
+				name: 'Look Up Registration',
+				value: 'whois',
+				action: 'Look up a domain registration',
+				description:
+					'Read the registry over RDAP for registrar, dates, EPP status codes, nameservers and DNSSEC',
+				routing: { request: { method: 'POST', url: '/api/tools/whois' } },
+			},
+			{
 				name: 'Validate DMARC Record',
 				value: 'dmarcValidate',
 				action: 'Validate a DMARC record',
@@ -75,6 +83,18 @@ export const toolDescription: INodeProperties[] = [
 		placeholder: 'example.com',
 		description: 'The domain whose SPF include chain to audit',
 		displayOptions: { show: { ...showOnlyForTool, operation: ['spfAudit'] } },
+		routing: { send: { type: 'body', property: 'domain' } },
+	},
+	// Look Up Registration
+	{
+		displayName: 'Domain',
+		name: 'domain',
+		type: 'string',
+		required: true,
+		default: '',
+		placeholder: 'example.com',
+		description: 'The domain whose registry record to read',
+		displayOptions: { show: { ...showOnlyForTool, operation: ['whois'] } },
 		routing: { send: { type: 'body', property: 'domain' } },
 	},
 	// Check DKIM Selector
