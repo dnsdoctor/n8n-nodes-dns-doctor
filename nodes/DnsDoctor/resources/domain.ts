@@ -101,7 +101,7 @@ export const domainDescription: INodeProperties[] = [
 		displayOptions: { show: { ...showOnlyForDomain, operation: ['report'] } },
 	},
 	{
-		// D116: the records read carries the domain as a QUERY parameter (the
+		// The records read carries the domain as a QUERY parameter (the
 		// `get_readiness` shape), so it declares its own property rather than
 		// joining the body-sending group above.
 		displayName: 'Domain',
