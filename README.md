@@ -18,6 +18,9 @@ Follow the [community nodes installation guide](https://docs.n8n.io/integrations
 | Get Report | The last persisted report for a domain, or a fresh scan when none exists |
 | Build DMARC Upgrade | The next safe DMARC record for a domain, alignment-gated, with the rationale. The record can be null; then the rationale is the answer |
 | Get Monitoring Signup Link | A link that carries the domain into paid monitoring, for a human to open |
+| Add Monitored Domain | Adds a domain to the token account's monitoring and returns the ownership TXT record to publish. Needs a token with the `domains:manage` scope |
+| Check Domain Verification | Re-checks the ownership TXT record and marks the domain verified on a match. A transient outcome is a lookup failure, never a verdict about the DNS. Needs a token |
+| Get Domain Records | The ownership record while unverified, and the DMARC reporting record once verified. Read-only. Needs a token |
 
 **Tool**
 
@@ -30,6 +33,7 @@ Follow the [community nodes installation guide](https://docs.n8n.io/integrations
 | Count SPF Lookups | The DNS lookups an SPF record spends against the limit of 10 |
 | Audit SPF Includes | Who can transitively send as the domain, with typed findings |
 | Validate DMARC Record | A DMARC record's tags, policy, warnings and errors |
+| Look Up Registration | The registry's RDAP reading: registrar, dates, EPP status codes, nameservers and DNSSEC. A registry that did not answer is `unknown`, never absence |
 
 **Monitoring** (needs an API token)
 
@@ -40,7 +44,7 @@ Follow the [community nodes installation guide](https://docs.n8n.io/integrations
 
 ## Credentials
 
-Optional. Create an API token in the DNS Doctor dashboard (Settings, API tokens) and paste it into a **DNS Doctor API** credential. A token raises the anonymous rate limit and unlocks the two monitoring reads. Scans and tools work without one.
+Optional. Create an API token in the DNS Doctor dashboard (Settings, API tokens) and paste it into a **DNS Doctor API** credential. A token raises the anonymous rate limit and unlocks the two monitoring reads and the three domain-management operations (Add Monitored Domain needs the `domains:manage` scope). Scans and tools work without one.
 
 ## Reading the results
 
