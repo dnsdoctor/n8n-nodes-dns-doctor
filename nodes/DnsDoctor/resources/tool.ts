@@ -1,6 +1,32 @@
-import type { INodeProperties } from 'n8n-workflow';
+import type { IExecuteSingleFunctions, IHttpRequestOptions, INodeProperties } from 'n8n-workflow';
 
 const showOnlyForTool = { resource: ['tool'] };
+
+// The report-parse route takes ONE multipart file part named `file` (the claude-plugin
+// client's `upload` route kind). Built by hand so the node keeps zero runtime deps.
+const BOUNDARY = '----dnsdoctor-n8n-report';
+
+async function reportAsMultipart(
+	this: IExecuteSingleFunctions,
+	requestOptions: IHttpRequestOptions,
+): Promise<IHttpRequestOptions> {
+	const report = this.getNodeParameter('report') as string;
+	const encoding = this.getNodeParameter('reportEncoding') as string;
+	const bytes = Buffer.from(report, encoding === 'base64' ? 'base64' : 'utf8');
+	requestOptions.body = Buffer.concat([
+		Buffer.from(
+			`--${BOUNDARY}\r\nContent-Disposition: form-data; name="file"; filename="report.xml"\r\n` +
+				'Content-Type: application/octet-stream\r\n\r\n',
+		),
+		bytes,
+		Buffer.from(`\r\n--${BOUNDARY}--\r\n`),
+	]);
+	requestOptions.headers = {
+		...requestOptions.headers,
+		'Content-Type': `multipart/form-data; boundary=${BOUNDARY}`,
+	};
+	return requestOptions;
+}
 
 export const toolDescription: INodeProperties[] = [
 	{
@@ -19,6 +45,14 @@ export const toolDescription: INodeProperties[] = [
 				routing: { request: { method: 'POST', url: '/api/tools/spf-audit' } },
 			},
 			{
+				name: 'Build Parked Domain Records',
+				value: 'parkedRecords',
+				action: 'Build parked domain records for a domain that sends no email',
+				description:
+					'Null MX, hard-fail SPF and p=reject DMARC for a NON-SENDING domain only. The server re-checks DNS and returns null records with a rationale when it finds evidence of mail.',
+				routing: { request: { method: 'POST', url: '/api/tools/parked-domain-records' } },
+			},
+			{
 				name: 'Check DKIM Selector',
 				value: 'dkimCheck',
 				action: 'Check a DKIM selector',
@@ -32,6 +66,14 @@ export const toolDescription: INodeProperties[] = [
 				description:
 					'Read one record at the authoritative nameservers and at public resolvers, with TTLs and whether they agree',
 				routing: { request: { method: 'POST', url: '/api/tools/check-record' } },
+			},
+			{
+				name: 'Check Lookalikes',
+				value: 'checkLookalikes',
+				action: 'Check a domain for lookalike domains',
+				description:
+					'DNS-only: which close variants of the name resolve and accept mail. Facts, never a verdict; a name that could not be checked counts as unknown.',
+				routing: { request: { method: 'POST', url: '/api/tools/lookalikes' } },
 			},
 			{
 				name: 'Check Propagation',
@@ -56,12 +98,31 @@ export const toolDescription: INodeProperties[] = [
 				routing: { request: { method: 'POST', url: '/api/tools/spf-count' } },
 			},
 			{
+				name: 'Generate DMARC Record',
+				value: 'dmarcGenerate',
+				action: 'Generate a DMARC record',
+				description:
+					'Build a DMARC record from scratch for a domain that has none, re-validated before it is returned. Every record carries np=reject.',
+				routing: { request: { method: 'POST', url: '/api/tools/dmarc-generate' } },
+			},
+			{
 				name: 'Look Up Registration',
 				value: 'whois',
 				action: 'Look up a domain registration',
 				description:
 					'Read the registry over RDAP for registrar, dates, EPP status codes, nameservers and DNSSEC',
 				routing: { request: { method: 'POST', url: '/api/tools/whois' } },
+			},
+			{
+				name: 'Parse DMARC Report',
+				value: 'dmarcReportParse',
+				action: 'Parse a DMARC aggregate report',
+				description:
+					'Parse one DMARC aggregate (RUA) report into per-source aggregates: who sent as the domain, how much, and what share aligned. Nothing is stored.',
+				routing: {
+					request: { method: 'POST', url: '/api/tools/dmarc-report-parse' },
+					send: { preSend: [reportAsMultipart] },
+				},
 			},
 			{
 				name: 'Validate DMARC Record',
@@ -275,5 +336,145 @@ export const toolDescription: INodeProperties[] = [
 		description: 'The DMARC record text to validate',
 		displayOptions: { show: { ...showOnlyForTool, operation: ['dmarcValidate'] } },
 		routing: { send: { type: 'body', property: 'record' } },
+	},
+	// Build Parked Domain Records
+	{
+		displayName: 'Domain',
+		name: 'domain',
+		type: 'string',
+		required: true,
+		default: '',
+		placeholder: 'example.com',
+		description: 'The non-sending domain to harden',
+		displayOptions: { show: { ...showOnlyForTool, operation: ['parkedRecords'] } },
+		routing: { send: { type: 'body', property: 'domain' } },
+	},
+	{
+		displayName: 'Owner Confirms No Mail',
+		name: 'confirmNoMail',
+		type: 'boolean',
+		required: true,
+		default: false,
+		description:
+			'Whether the human who owns the domain confirms it sends no email at all. Only they may decide it. It unlocks the question, not the answer: the server re-checks DNS for evidence of mail and refuses when it finds any.',
+		displayOptions: { show: { ...showOnlyForTool, operation: ['parkedRecords'] } },
+		routing: { send: { type: 'body', property: 'confirm_no_mail' } },
+	},
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: { show: { ...showOnlyForTool, operation: ['parkedRecords'] } },
+		options: [
+			{
+				displayName: 'RUA Email',
+				name: 'ruaEmail',
+				type: 'string',
+				default: '',
+				placeholder: 'dmarc@example.com',
+				description:
+					'Mailbox to receive DMARC aggregate reports. Strongly recommended: without it nobody can see who sends as the domain.',
+				routing: { send: { type: 'body', property: 'rua_email' } },
+			},
+		],
+	},
+	// Check Lookalikes
+	{
+		displayName: 'Domain',
+		name: 'domain',
+		type: 'string',
+		required: true,
+		default: '',
+		placeholder: 'example.com',
+		description: 'The domain whose lookalike names to check',
+		displayOptions: { show: { ...showOnlyForTool, operation: ['checkLookalikes'] } },
+		routing: { send: { type: 'body', property: 'domain' } },
+	},
+	// Generate DMARC Record
+	{
+		displayName: 'Policy',
+		name: 'policy',
+		type: 'options',
+		options: [
+			{ name: 'None', value: 'none', description: 'Monitor only' },
+			{ name: 'Quarantine', value: 'quarantine', description: 'Send failing mail to spam' },
+			{ name: 'Reject', value: 'reject', description: 'Refuse failing mail outright' },
+		],
+		default: 'none',
+		description:
+			"The p= policy. Start at None unless the domain's aggregate reports already justify enforcement.",
+		displayOptions: { show: { ...showOnlyForTool, operation: ['dmarcGenerate'] } },
+		routing: { send: { type: 'body', property: 'policy' } },
+	},
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: { show: { ...showOnlyForTool, operation: ['dmarcGenerate'] } },
+		options: [
+			{
+				displayName: 'RUA Email',
+				name: 'ruaEmail',
+				type: 'string',
+				default: '',
+				placeholder: 'dmarc@example.com',
+				description:
+					'Mailbox to receive DMARC aggregate reports. Strongly recommended: without it nobody can see who sends as the domain.',
+				routing: { send: { type: 'body', property: 'rua_email' } },
+			},
+			{
+				displayName: 'Strict Alignment',
+				name: 'strictAlignment',
+				type: 'boolean',
+				default: false,
+				description:
+					'Whether to emit strict alignment (aspf=s adkim=s). Leave off unless every sender aligns strictly.',
+				routing: { send: { type: 'body', property: 'strict_alignment' } },
+			},
+			{
+				displayName: 'Subdomain Policy',
+				name: 'subdomainPolicy',
+				type: 'options',
+				options: [
+					{ name: 'None', value: 'none' },
+					{ name: 'Quarantine', value: 'quarantine' },
+					{ name: 'Reject', value: 'reject' },
+				],
+				default: 'none',
+				description: 'An sp= policy for subdomains when it should differ from p=. Omit to inherit p=.',
+				routing: { send: { type: 'body', property: 'subdomain_policy' } },
+			},
+		],
+	},
+	// Parse DMARC Report (sent as a multipart file by reportAsMultipart)
+	{
+		displayName: 'Report Encoding',
+		name: 'reportEncoding',
+		type: 'options',
+		options: [
+			{ name: 'XML Text', value: 'text', description: 'The report XML pasted or mapped as text' },
+			{
+				name: 'Base64',
+				value: 'base64',
+				description: 'The attachment bytes base64-encoded (.xml, .xml.gz or .zip)',
+			},
+		],
+		default: 'text',
+		description: 'How the report is given. Compressed (.gz, .zip) reports need Base64.',
+		displayOptions: { show: { ...showOnlyForTool, operation: ['dmarcReportParse'] } },
+	},
+	{
+		displayName: 'Report',
+		name: 'report',
+		type: 'string',
+		typeOptions: { rows: 4 },
+		required: true,
+		default: '',
+		description: 'One DMARC aggregate (RUA) report, up to 2 MiB decoded',
+		displayOptions: { show: { ...showOnlyForTool, operation: ['dmarcReportParse'] } },
 	},
 ];

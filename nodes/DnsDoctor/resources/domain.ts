@@ -15,7 +15,7 @@ export const domainDescription: INodeProperties[] = [
 				value: 'addDomain',
 				action: 'Add a domain to monitoring',
 				description:
-					'Adds a domain to the token account\'s monitoring and returns the ownership TXT record to publish. Requires a credential with the domains:manage scope.',
+					"Adds a domain to the token account's monitoring and returns its ownership TXT record. Ownership takes one DNS record: the DMARC record with your DNS Doctor report address (returned by Check Domain Verification), or this ownership TXT record instead. Requires a credential with the domains:manage scope.",
 				routing: { request: { method: 'POST', url: '/api/v1/domains' } },
 			},
 			{
@@ -31,7 +31,7 @@ export const domainDescription: INodeProperties[] = [
 				value: 'verifyDomain',
 				action: 'Check whether a domain ownership record is visible',
 				description:
-					'Re-checks the ownership TXT record and marks the domain verified on a match. A transient outcome is our lookup, never a verdict about the DNS.',
+					'Looks for the one ownership record (the DMARC record with your DNS Doctor report address, or the ownership TXT record instead) and marks the domain verified on a match. Returns that DMARC record to publish. A transient outcome is our lookup, never a verdict about the DNS.',
 				routing: { request: { method: 'POST', url: '/api/v1/domains/verify' } },
 			},
 			{
@@ -39,7 +39,7 @@ export const domainDescription: INodeProperties[] = [
 				value: 'domainRecords',
 				action: 'Get the records a monitored domain still needs',
 				description:
-					'The ownership record while unverified, and the DMARC reporting record once verified. Read-only.',
+					'The DMARC record with your DNS Doctor report address once Check Domain Verification has issued it (with the ownership TXT alternative while unverified), else the ownership TXT record. Read-only.',
 				routing: {
 					request: {
 						method: 'GET',

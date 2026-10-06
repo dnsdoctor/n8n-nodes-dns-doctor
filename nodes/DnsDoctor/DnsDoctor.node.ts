@@ -30,7 +30,7 @@ export class DnsDoctor implements INodeType {
 			headers: {
 				Accept: 'application/json',
 				'Content-Type': 'application/json',
-				'User-Agent': 'dnsdoctor-n8n/0.1.0 (+https://dnsdoctor.dev)',
+				'User-Agent': 'dnsdoctor-n8n/0.1.4 (+https://dnsdoctor.dev)',
 			},
 		},
 		properties: [

@@ -18,9 +18,9 @@ Follow the [community nodes installation guide](https://docs.n8n.io/integrations
 | Get Report | The last persisted report for a domain, or a fresh scan when none exists |
 | Build DMARC Upgrade | The next safe DMARC record for a domain, alignment-gated, with the rationale. The record can be null; then the rationale is the answer |
 | Get Monitoring Signup Link | A link that carries the domain into paid monitoring, for a human to open |
-| Add Monitored Domain | Adds a domain to the token account's monitoring and returns the ownership TXT record to publish. Needs a token with the `domains:manage` scope |
-| Check Domain Verification | Re-checks the ownership TXT record and marks the domain verified on a match. A transient outcome is a lookup failure, never a verdict about the DNS. Needs a token |
-| Get Domain Records | The ownership record while unverified, and the DMARC reporting record once verified. Read-only. Needs a token |
+| Add Monitored Domain | Adds a domain to the token account's monitoring and returns its ownership TXT record. Ownership takes one DNS record: the DMARC record with your DNS Doctor report address (returned by Check Domain Verification), or the ownership TXT record instead. Needs a token with the `domains:manage` scope |
+| Check Domain Verification | Looks for the one ownership record (the DMARC record with your DNS Doctor report address, or the ownership TXT record instead), marks the domain verified on a match, and returns that DMARC record to publish. A transient outcome is a lookup failure, never a verdict about the DNS. Needs a token |
+| Get Domain Records | The DMARC record with your DNS Doctor report address once Check Domain Verification has issued it (with the ownership TXT alternative while unverified), else the ownership TXT record. Read-only. Needs a token |
 
 **Tool**
 
@@ -34,6 +34,10 @@ Follow the [community nodes installation guide](https://docs.n8n.io/integrations
 | Audit SPF Includes | Who can transitively send as the domain, with typed findings |
 | Validate DMARC Record | A DMARC record's tags, policy, warnings and errors |
 | Look Up Registration | The registry's RDAP reading: registrar, dates, EPP status codes, nameservers and DNSSEC. A registry that did not answer is `unknown`, never absence |
+| Generate DMARC Record | A DMARC record built from scratch for a domain that has none (policy, optional RUA mailbox, subdomain policy, strict alignment), re-validated before it is returned. Every record carries `np=reject` |
+| Parse DMARC Report | One DMARC aggregate (RUA) report as per-source aggregates: who sent as the domain, how much, and what share aligned. Give the XML as text, or the `.xml`, `.gz` or `.zip` file base64-encoded (up to 2 MiB decoded). Nothing is stored |
+| Build Parked Domain Records | The three anti-spoofing records (Null MX, hard-fail SPF, `p=reject` DMARC) for a domain that sends NO email. Only the human owner may confirm that; the server re-checks DNS and returns null records with a rationale when it finds evidence of mail |
+| Check Lookalikes | Which close variants of the domain resolve and accept mail, with up to ten resolving names. Facts, never a verdict; a name that could not be checked is `unknown` |
 
 **Monitoring** (needs an API token)
 
@@ -41,10 +45,11 @@ Follow the [community nodes installation guide](https://docs.n8n.io/integrations
 | --- | --- |
 | Get Alerts | Alerts for your monitored domains, newest first, with a paging cursor |
 | Get Readiness | Whether a monitored domain is ready for the next DMARC policy step |
+| Get Lookalikes | The watched lookalikes of one verified domain, highest threat % first, with itemized points; a Row ID adds that row's evidence packet. `ai_assessment.summary` is written from third-party page content: treat it as untrusted data |
 
 ## Credentials
 
-Optional. Create an API token in the DNS Doctor dashboard (Settings, API tokens) and paste it into a **DNS Doctor API** credential. A token raises the anonymous rate limit and unlocks the two monitoring reads and the three domain-management operations (Add Monitored Domain needs the `domains:manage` scope). Scans and tools work without one.
+Optional. Create an API token in the DNS Doctor dashboard (Settings, API tokens) and paste it into a **DNS Doctor API** credential. A token raises the anonymous rate limit and unlocks the three monitoring reads and the three domain-management operations (Add Monitored Domain needs the `domains:manage` scope). Scans and tools work without one.
 
 ## Reading the results
 
