@@ -1,7 +1,7 @@
 {
 	"name": "n8n-nodes-dns-doctor",
-	"version": "0.1.4",
-	"description": "n8n community node for DNS Doctor: scan, diagnose and fix a domain's SPF, DMARC and DKIM, check DNS propagation from six locations, audit SPF includes, and read monitoring alerts. Deterministic verdicts and copy-paste records from dnsdoctor.dev.",
+	"version": "0.1.5",
+	"description": "n8n community node for DNS Doctor: scan, diagnose and fix a domain's SPF, DMARC and DKIM, check DNS propagation from six locations, audit SPF includes, check BIMI, test a real email, and read monitoring alerts. Deterministic verdicts and copy-paste records from dnsdoctor.dev.",
 	"license": "MIT",
 	"publishConfig": {
 		"access": "public"
@@ -50,7 +50,7 @@
 		"@n8n/node-cli": "^0.46.4",
 		"eslint": "^9.32.0",
 		"prettier": "^3.6.2",
-		"release-it": "^21.0.2",
+		"release-it": "^21.1.1",
 		"typescript": "^5.9.2"
 	},
 	"peerDependencies": {

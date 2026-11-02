@@ -34,6 +34,22 @@ export const monitoringDescription: INodeProperties[] = [
 					'Whether a monitored domain is ready for the next DMARC policy step, from its aggregate reports. Needs an API token.',
 				routing: { request: { method: 'GET', url: '/api/v1/readiness' } },
 			},
+			{
+				name: 'List Email Tests',
+				value: 'emailTests',
+				action: 'List the account email tests',
+				description:
+					"The token account's own email tests, newest first, each with its test ID, status, score, DMARC result and report URL. Get Email Test (Tool) returns one in full. Needs an API token.",
+				routing: { request: { method: 'GET', url: '/api/v1/email-tests' } },
+			},
+			{
+				name: 'List My Domains',
+				value: 'myDomains',
+				action: 'List the account domains',
+				description:
+					'Every domain on the token account with its state (verified, pending or verification_lapsed) and next_step, the one thing to do next for it. Needs an API token.',
+				routing: { request: { method: 'GET', url: '/api/v1/domains/mine' } },
+			},
 		],
 		default: 'alerts',
 	},
@@ -163,6 +179,35 @@ export const monitoringDescription: INodeProperties[] = [
 				default: 'needs_action',
 				description: 'Which watched names to return. Counts for every view come back either way.',
 				routing: { send: { type: 'query', property: 'view' } },
+			},
+		],
+	},
+	{
+		displayName: 'Additional Fields',
+		name: 'emailTestFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: { show: { ...showOnlyForMonitoring, operation: ['emailTests'] } },
+		options: [
+			{
+				displayName: 'Domain',
+				name: 'domain',
+				type: 'string',
+				default: '',
+				placeholder: 'example.com',
+				description:
+					'Only tests whose From address names this organization (a subdomain counts as its organization)',
+				routing: { send: { type: 'query', property: 'domain' } },
+			},
+			{
+				displayName: 'Limit',
+				name: 'limit',
+				type: 'number',
+				typeOptions: { minValue: 1, maxValue: 50 },
+				default: 50,
+				description: 'Max number of results to return',
+				routing: { send: { type: 'query', property: 'limit' } },
 			},
 		],
 	},

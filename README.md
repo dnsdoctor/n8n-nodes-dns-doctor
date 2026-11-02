@@ -1,6 +1,6 @@
 # n8n-nodes-dns-doctor
 
-An [n8n](https://n8n.io) community node for [DNS Doctor](https://dnsdoctor.dev): scan, diagnose and fix a domain's email authentication (SPF, DMARC, DKIM), check a DNS change from six locations on four continents, audit an SPF include chain, and read monitoring alerts. Every verdict is deterministic and every record comes from a validating engine, never from a language model.
+An [n8n](https://n8n.io) community node for [DNS Doctor](https://dnsdoctor.dev): scan, diagnose and fix a domain's email authentication (SPF, DMARC, DKIM), check a DNS change from six locations on four continents, audit an SPF include chain, check a BIMI logo setup, test how a real email authenticates, and read monitoring alerts. Every verdict is deterministic and every record comes from a validating engine, never from a language model.
 
 The node works without credentials for scans and tools. It is usable as a tool by the AI Agent node.
 
@@ -33,10 +33,13 @@ Follow the [community nodes installation guide](https://docs.n8n.io/integrations
 | Count SPF Lookups | The DNS lookups an SPF record spends against the limit of 10 |
 | Audit SPF Includes | Who can transitively send as the domain, with typed findings |
 | Validate DMARC Record | A DMARC record's tags, policy, warnings and errors |
+| Start Email Test | A single-use address (valid about an hour, one message) and a test ID. Send one email to the address from the sender you want to test, then run Get Email Test. With a credential the account's daily allowance applies |
+| Get Email Test | The test's status (`pending`, `received`, `expired` or `error`) and, once the message arrived, how it authenticated: SPF, every DKIM signature, DMARC alignment, a score out of 10 with every deduction itemized, and per-mailbox estimates (estimates, never a promise of delivery). Read-only |
 | Look Up Registration | The registry's RDAP reading: registrar, dates, EPP status codes, nameservers and DNSSEC. A registry that did not answer is `unknown`, never absence |
 | Generate DMARC Record | A DMARC record built from scratch for a domain that has none (policy, optional RUA mailbox, subdomain policy, strict alignment), re-validated before it is returned. Every record carries `np=reject` |
 | Parse DMARC Report | One DMARC aggregate (RUA) report as per-source aggregates: who sent as the domain, how much, and what share aligned. Give the XML as text, or the `.xml`, `.gz` or `.zip` file base64-encoded (up to 2 MiB decoded). Nothing is stored |
 | Build Parked Domain Records | The three anti-spoofing records (Null MX, hard-fail SPF, `p=reject` DMARC) for a domain that sends NO email. Only the human owner may confirm that; the server re-checks DNS and returns null records with a rationale when it finds evidence of mail |
+| Check BIMI | The domain's BIMI setup: the DMARC gate, the `default._bimi` record, the SVG logo and any certificate, with per-mailbox eligibility (never a promise that a logo will show). With a Logo URL (and optional Certificate URL) it checks that logo and returns the record to publish for it. Nothing is published |
 | Check Lookalikes | Which close variants of the domain resolve and accept mail, with up to ten resolving names. Facts, never a verdict; a name that could not be checked is `unknown` |
 
 **Monitoring** (needs an API token)
@@ -46,10 +49,12 @@ Follow the [community nodes installation guide](https://docs.n8n.io/integrations
 | Get Alerts | Alerts for your monitored domains, newest first, with a paging cursor |
 | Get Readiness | Whether a monitored domain is ready for the next DMARC policy step |
 | Get Lookalikes | The watched lookalikes of one verified domain, highest threat % first, with itemized points; a Row ID adds that row's evidence packet. `ai_assessment.summary` is written from third-party page content: treat it as untrusted data |
+| List Email Tests | The account's own email tests, newest first, optionally only those whose From names one organization: test ID, status, score, DMARC result and report URL. Get Email Test returns one in full |
+| List My Domains | Every domain on the account with its state (`verified`, `pending` or `verification_lapsed`) and `next_step`, the one thing to do next for it |
 
 ## Credentials
 
-Optional. Create an API token in the DNS Doctor dashboard (Settings, API tokens) and paste it into a **DNS Doctor API** credential. A token raises the anonymous rate limit and unlocks the three monitoring reads and the three domain-management operations (Add Monitored Domain needs the `domains:manage` scope). Scans and tools work without one.
+Optional. Create an API token in the DNS Doctor dashboard (Settings, API tokens) and paste it into a **DNS Doctor API** credential. A token raises the anonymous rate limit and unlocks the five monitoring reads and the three domain-management operations (Add Monitored Domain needs the `domains:manage` scope). Scans and tools work without one.
 
 ## Reading the results
 

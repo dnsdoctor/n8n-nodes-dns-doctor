@@ -53,6 +53,14 @@ export const toolDescription: INodeProperties[] = [
 				routing: { request: { method: 'POST', url: '/api/tools/parked-domain-records' } },
 			},
 			{
+				name: 'Check BIMI',
+				value: 'bimiCheck',
+				action: 'Check a domain BIMI logo setup',
+				description:
+					'A live read of BIMI: the DMARC gate, the default._bimi record, the SVG logo and any certificate. Mailbox results are eligibility, never a promise that a logo will show. With a Logo URL it returns the record to publish for that logo. Nothing is published.',
+				routing: { request: { method: 'POST', url: '/api/tools/bimi' } },
+			},
+			{
 				name: 'Check DKIM Selector',
 				value: 'dkimCheck',
 				action: 'Check a DKIM selector',
@@ -106,6 +114,14 @@ export const toolDescription: INodeProperties[] = [
 				routing: { request: { method: 'POST', url: '/api/tools/dmarc-generate' } },
 			},
 			{
+				name: 'Get Email Test',
+				value: 'getEmailTest',
+				action: 'Get an email test result',
+				description:
+					'The status of a test from Start Email Test (pending, received, expired or error) and, once the message arrived, how it authenticated, with a score out of 10 and per-mailbox estimates. Read-only.',
+				routing: { request: { method: 'GET', url: '/api/tools/email-test' } },
+			},
+			{
 				name: 'Look Up Registration',
 				value: 'whois',
 				action: 'Look up a domain registration',
@@ -123,6 +139,14 @@ export const toolDescription: INodeProperties[] = [
 					request: { method: 'POST', url: '/api/tools/dmarc-report-parse' },
 					send: { preSend: [reportAsMultipart] },
 				},
+			},
+			{
+				name: 'Start Email Test',
+				value: 'startEmailTest',
+				action: 'Start an email test',
+				description:
+					'A single-use address (valid about an hour, one message) and a test ID. Send one email to the address from the sender to test, then run Get Email Test with the test ID. With a credential the account allowance applies.',
+				routing: { request: { method: 'POST', url: '/api/tools/email-test' } },
 			},
 			{
 				name: 'Validate DMARC Record',
@@ -476,5 +500,59 @@ export const toolDescription: INodeProperties[] = [
 		default: '',
 		description: 'One DMARC aggregate (RUA) report, up to 2 MiB decoded',
 		displayOptions: { show: { ...showOnlyForTool, operation: ['dmarcReportParse'] } },
+	},
+	// Check BIMI
+	{
+		displayName: 'Domain',
+		name: 'domain',
+		type: 'string',
+		required: true,
+		default: '',
+		placeholder: 'example.com',
+		description: 'The domain or subdomain whose BIMI setup to read',
+		displayOptions: { show: { ...showOnlyForTool, operation: ['bimiCheck'] } },
+		routing: { send: { type: 'body', property: 'domain' } },
+	},
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: { show: { ...showOnlyForTool, operation: ['bimiCheck'] } },
+		options: [
+			{
+				displayName: 'Certificate URL',
+				name: 'certificateUrl',
+				type: 'string',
+				default: '',
+				placeholder: 'https://example.com/vmc.pem',
+				description:
+					'An https:// URL of the VMC or CMC certificate (PEM) for the candidate logo. Only used together with Logo URL.',
+				routing: { send: { type: 'body', property: 'certificate_url' } },
+			},
+			{
+				displayName: 'Logo URL',
+				name: 'logoUrl',
+				type: 'string',
+				default: '',
+				placeholder: 'https://example.com/logo.svg',
+				description:
+					'An https:// URL of a candidate SVG logo. That logo is checked instead of the published one, and the response carries the BIMI record for it. Omit to check what the domain already publishes.',
+				routing: { send: { type: 'body', property: 'logo_url' } },
+			},
+		],
+	},
+	// Get Email Test
+	{
+		displayName: 'Test ID',
+		name: 'testId',
+		type: 'string',
+		required: true,
+		default: '',
+		description:
+			'The test ID Start Email Test returned, not the test address. Tests started without an account are kept 24 hours.',
+		displayOptions: { show: { ...showOnlyForTool, operation: ['getEmailTest'] } },
+		routing: { send: { type: 'query', property: 'test_id' } },
 	},
 ];

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5
+
+- Tool: Check BIMI (the DMARC gate, BIMI record, logo and certificate, or the record to publish for a candidate logo), Start Email Test and Get Email Test (send one real message and read how it authenticated).
+- Monitoring: List Email Tests and List My Domains (need an API token).
+- The node now covers all 27 DNS Doctor tools.
+
 ## 0.1.4
 
 - Tool: Generate DMARC Record, Parse DMARC Report (XML text, or a base64 `.xml`/`.gz`/`.zip` file), Build Parked Domain Records and Check Lookalikes.
