@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+
+- The README now says first what DNS Doctor does for a domain owner. No node or tool changes.
+
 ## 0.1.5
 
 - Tool: Check BIMI (the DMARC gate, BIMI record, logo and certificate, or the record to publish for a candidate logo), Start Email Test and Get Email Test (send one real message and read how it authenticated).

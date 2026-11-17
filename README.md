@@ -1,5 +1,7 @@
 # n8n-nodes-dns-doctor
 
+**Get your domain's email working, and know it stays that way.** See why mail lands in spam, get the exact DNS record to fix it, and check the change is live everywhere.
+
 An [n8n](https://n8n.io) community node for [DNS Doctor](https://dnsdoctor.dev): scan, diagnose and fix a domain's email authentication (SPF, DMARC, DKIM), check a DNS change from six locations on four continents, audit an SPF include chain, check a BIMI logo setup, test how a real email authenticates, and read monitoring alerts. Every verdict is deterministic and every record comes from a validating engine, never from a language model.
 
 The node works without credentials for scans and tools. It is usable as a tool by the AI Agent node.
